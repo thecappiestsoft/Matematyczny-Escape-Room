@@ -1,18 +1,28 @@
-# Buduje grę i publikuje ją w GitHub Pages przy każdym pushu do gałęzi main.
-name: Publikacja w GitHub Pages
+# Po każdej zmianie kodu gry: testy, zbudowanie gry do jednego pliku
+# i odświeżenie ./index.html, który wyświetla GitHub Pages
+# (ustawienie Pages: "Deploy from a branch", gałąź main, folder / (root)).
+name: Aktualizacja gry w GitHub Pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'app.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-build
   cancel-in-progress: true
 
 jobs:
@@ -26,17 +36,23 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - run: npm run build:pages
+      - name: Zapisz zbudowaną grę (index.html), jeśli się zmieniła
+        id: commit
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "index.html jest aktualny – nic do zapisania."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add index.html
+            git commit -m "Aktualizacja zbudowanej gry (index.html)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Odśwież GitHub Pages
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "Pages odświeży się samo przy następnej publikacji."
