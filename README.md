@@ -3,15 +3,28 @@
 Edukacyjna gra przygodowa typu point-and-click do nauki matematyki (SP / LO / Technikum).
 React + TypeScript + Vite, grafika SVG, zapis w localStorage. © 2026 CappySoft.pl
 
+## Zagraj
+
+https://thecappiestsoft.github.io/Matematyczny-Escape-Room/
+
 ## Uruchomienie
 
 ```bash
 npm install
-npm run dev          # tryb deweloperski
+npm run dev          # tryb deweloperski (otwiera app.html)
 npm run build        # build produkcyjny -> dist/
-npm run build:single # cała gra w jednym pliku HTML -> dist-single/index.html
+npm run build:single # cała gra w jednym pliku HTML -> dist-single/app.html
+npm run build:pages  # jak build:single + kopia do ./index.html (wersja dla GitHub Pages)
 npm test             # automatyczne przejście wszystkich scenariuszy na wszystkich poziomach
 ```
+
+## GitHub Pages
+
+- `app.html` – punkt wejścia kodu źródłowego (używany przez Vite).
+- `index.html` – **gotowa, zbudowana gra** w jednym pliku. To ją wyświetla GitHub Pages
+  (Settings → Pages → „Deploy from a branch”, gałąź `main`, folder `/ (root)`).
+- Po każdej zmianie kodu workflow `.github/workflows/deploy.yml` uruchamia testy,
+  buduje grę i sam odświeża `index.html`. Nie edytuj `index.html` ręcznie.
 
 ## Zawartość wersji 1
 
